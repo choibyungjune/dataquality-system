@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
+import os
+import glob
 BOOKS = [
     {
         'title': 'On the Road',
@@ -25,6 +27,10 @@ DEBUG = True
 # instantiate the app
 app = Flask(__name__)
 app.config.from_object(__name__)
+UPLOAD_FOLDER = './uploads'
+csvfiles = []
+for file in glob.glob(os.path.join(UPLOAD_FOLDER, "*.csv")):
+    csvfiles.append(file)
 
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
@@ -63,11 +69,24 @@ def dbconnect():
 @app.route('/csvupload', methods=['POST'])
 def upload():
     file = request.files['file'] #
-    df = pd.read_csv(file)
+    filename = file.filename
+    #print(file)
+    #print(filename)
+    file.save(os.path.join(UPLOAD_FOLDER, filename))
+
+    df = pd.read_csv(os.path.join(UPLOAD_FOLDER, filename))
+
     print(df.head())
     # return df.to_json()
     return df.head(5).to_json()
 
+@app.route('/columnname', methods=['POST'])
+def column_name_inspect():
+
+    print(csvfiles)
+
+    # return df.to_json()
+    return jsonify({'message': 'operation success'})
 
 @app.route('/books', methods=['GET', 'POST'])
 def all_books():
