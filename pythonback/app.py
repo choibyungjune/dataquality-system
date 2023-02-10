@@ -3,6 +3,9 @@ from flask_cors import CORS
 import pandas as pd
 import os
 import glob
+from csv_column_name import check_col_type, change_column
+from csv_value import check_word, change_word, change_word_null
+import json
 BOOKS = [
     {
         'title': 'On the Road',
@@ -80,13 +83,27 @@ def upload():
     # return df.to_json()
     return df.head(5).to_json()
 
-@app.route('/columnname', methods=['POST'])
+@app.route('/file-name', methods=['GET'])
+def file_name():
+    file_names = []
+    for file in glob.glob("./uploads/*.csv"):
+        file_names.append(file)
+    print(file_names)
+    json_file_name = json.dumps(file_names)
+
+    return jsonify(json_file_name)
+
+
+@app.route('/columnname', methods=['GET'])
 def column_name_inspect():
+    df = pd.read_csv('./uploads/sample_column_name.csv')
+    df = check_col_type(df)
+    print(df)
 
-    print(csvfiles)
-
-    # return df.to_json()
-    return jsonify({'message': 'operation success'})
+    # Check the column names
+    column_names = df.columns
+    print(column_names)
+    return jsonify(column_names.tolist())
 
 @app.route('/books', methods=['GET', 'POST'])
 def all_books():
